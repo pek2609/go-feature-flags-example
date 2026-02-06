@@ -1,0 +1,9 @@
+calculate-fee-1:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - query: targetingKey eq "123456"
+      variation: enabled
+  defaultRule:
+    variation: disabled

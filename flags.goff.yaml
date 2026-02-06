@@ -1,0 +1,108 @@
+show-email-contact:
+  variations:
+    enabled: "yes"
+    disabled: "no"
+  defaultRule:
+    disable: true
+    variation: enabled
+
+test_round_amount:
+  variations:
+    with_cents:
+      value: 100.50
+      currency: LKR
+  targeting:
+    - query: targetingKey ew "testCents" and env ne "dev"
+      variation: with_cents
+  defaultRule:
+    variation: with_cents
+    disable: true
+
+test_round_amount_json:
+  variations:
+    with_cents: "{\"value\": 100.50, \"currency\": \"LKR\"}"
+  targeting:
+    - query: targetingKey ew "testCents" and env ne "dev"
+      variation: with_cents
+  defaultRule:
+    variation: with_cents
+    disable: true
+
+#merchant_action:
+#  variations:
+#    enabled: true
+#    disabled: false
+#  targeting:
+#    - query: (targetingKey eq "d0241695-b8c7-4aed-8586-75601792cc12") or (amount < 10 and payerDetails.email ew "test.com")
+#      variation: enabled
+#  defaultRule:
+#    variation: disabled
+#
+#merchant_action_option:
+#  disable: false
+#  bucketingKey: operationId
+#  variations:
+#    fullFlow: BANKING_H2H_FULL_FLOW
+#    infoParamsOnly: BANKING_H2H_INFO_PARAMS_ONLY
+#    submitParamsOnly: BANKING_H2H_SUBMIT_PARAMS_ONLYd
+#  defaultRule:
+#    percentage:
+#      fullFlow: 33
+#      infoParamsOnly: 33
+#      submitParamsOnly: 33
+
+calculate-fee:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - query: targetingKey ew "test" and env ne "dev"
+      variation: enabled
+  scheduledRollout:
+    - date: 2026-01-06T16:27:00.100Z
+      targeting:
+        - name: testTarget
+          query: targetingKey ew "test" and env ne "dev"
+          variation: enabled
+    - date: 2026-01-06T16:29:00.100Z
+      defaultRule:
+        name: testTarget
+        variation: enabled
+  defaultRule:
+    name: testTarget
+    variation: disabled
+
+calculate-fee-new:
+  bucketingKey: uuid
+  disable: false
+  variations:
+    zero: 0.0
+    two: 0.02
+    two-half: 0.025
+    three: 0.03
+    five: 0.05
+  targeting:
+    - query: (targetingKey ew "test") and (context.currency eq "UAH") and (context.amount gt 100.50)
+      variation: three
+    - query: context.currency eq "UAH"
+      disable: false
+      name: ua_rule
+      percentage:
+        zero: 50
+        two: 50
+    - query: context.currency eq "USD"
+      percentage:
+        two: 99
+        three: 1
+    - query: context.currency eq "EUR"
+      progressiveRollout:
+        initial:
+          variation: two-half
+          date: 2026-01-06T15:10:00.100Z
+        end:
+          variation: three
+          date: 2026-01-06T15:15:00.100Z
+    - query: context.currency eq "GBP"
+      variation: three
+  defaultRule:
+    variation: three

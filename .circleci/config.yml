@@ -1,0 +1,24 @@
+version: 2.1
+
+workflows:
+  pipeline:
+    jobs:
+      - verify:
+          context: org-global
+
+jobs:
+  verify:
+    docker:
+        - image: gofeatureflag/go-feature-flag-cli:latest
+    steps:
+      - checkout
+      - run:
+          name: Lint feature flag configs
+          command: |
+            for file in ./*.goff.yaml;
+            do
+              if [ -f "$file" ]; then
+                echo "Linting $file..."
+                ./go-feature-flag-cli lint "$file" --format=yaml
+              fi
+            done
