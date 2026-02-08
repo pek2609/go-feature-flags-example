@@ -22,6 +22,6 @@ jobs:
                 docker run --rm \
                   -v "$PWD/$file":/config.yaml \
                   gofeatureflag/go-feature-flag-cli \
-                  lint --config=/config.yaml --format=yaml
+                  lint /config.yaml --format=yaml
               fi
             done
