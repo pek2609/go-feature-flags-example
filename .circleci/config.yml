@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Lint feature flag configs
           command: |
-            for file in ./*.goff.yaml; do
+            for file in *.goff.yaml; do
               if [ -f "$file" ]; then
                 echo "Linting $file..."
                 docker run --rm \
