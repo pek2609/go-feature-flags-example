@@ -20,8 +20,8 @@ jobs:
               if [ -f "$file" ]; then
                 echo "Linting $file..."
                 docker run --rm \
-                  -v "$PWD/$file":/config.yaml \
+                  -v "$PWD":/data \
                   gofeatureflag/go-feature-flag-cli \
-                  lint /config.yaml --format=yaml
+                  lint "/data/$file" --format=yaml
               fi
             done
