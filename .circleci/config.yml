@@ -16,8 +16,7 @@ jobs:
       - run:
           name: Lint feature flags
           command: |
-            docker run -d --name linter --rm --entrypoint tail gofeatureflag/go-feature-flag-cli -f /dev/null
-
+            docker run -d --name linter --rm --entrypoint /app/go-feature-flag-cli gofeatureflag/go-feature-flag-cli version
             for file in *.goff.yaml; do
               [ -e "$file" ] || continue
               echo "Processing $file..."
