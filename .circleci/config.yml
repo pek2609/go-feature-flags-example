@@ -13,12 +13,27 @@ jobs:
     steps:
       - checkout
       - run:
+          # 1. retrieve release json
+          # 2. retrieve cli binary url
+          # 3. dwonload and install cli
+
           name: Download and Install GO Feature Flag CLI
-          command: |    
-            URL=$(curl -s https://api.github.com/repos/thomaspoignant/go-feature-flag/releases | jq -r '[.[] | select(.tag_name | test("^v[0-9]"))][0].assets[] | select(.name | contains("Linux_x86_64.tar.gz")) | .browser_download_url')
-            echo "Downloading from: $URL"
-            curl -L "$URL" --output release.tar.gz
-            tar -zxvf release.tar.gz
+          environment:
+            REPO: "thomaspoignant/go-feature-flag"
+            BINARY_PATTERN: "go-feature-flag-cli_.*_Linux_x86_64.tar.gz$"
+          command: |  
+            RELEASE_JSON=$(curl -s "https://api.github.com/repos/$REPO/releases" | jq '[.[] | select(.tag_name | test("^v[0-9]"))][0]')
+            CLI_URL=$(echo "$RELEASE_JSON" | jq -r --arg pattern "$BINARY_PATTERN" '.assets[] | select(.name | test($pattern)) | .browser_download_url') 
+            
+            if [ "$CLI_URL" == "null" ]; then
+              echo "Unable to install GO Feature Flag CLI: Binary not found!"
+              exit 1
+            fi
+            
+            echo "Downloading cli from: $CLI_URL"
+            curl -L "$CLI_URL" --output release.tar.gz
+            tar -zxvf release.tar.gz go-feature-flag-cli
+            rm release.tar.gz
       - run:
           name: Lint Feature Flags
           command: |      
