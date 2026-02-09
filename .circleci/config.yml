@@ -9,14 +9,14 @@ workflows:
 jobs:
   verify:
     docker:
-      - image: gofeatureflag/go-feature-flag-cli:latest
-        entrypoint: ["/bin/sh", "-c"]
+      - image: cimg/base:current
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Lint Feature Flags
           command: |
             for file in *.goff.yaml; do
               [ -e "$file" ] || continue
-              /app/go-feature-flag-cli lint "$file" --format=yaml
+              cat "$file" | docker run --rm -i gofeatureflag/go-feature-flag-cli lint - --format=yaml
             done
