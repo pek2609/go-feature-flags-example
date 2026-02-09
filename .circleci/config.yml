@@ -14,9 +14,16 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Lint Feature Flags
+          name: Lint feature flags
           command: |
+            docker run -d --name linter --rm --entrypoint tail gofeatureflag/go-feature-flag-cli -f /dev/null
+
             for file in *.goff.yaml; do
               [ -e "$file" ] || continue
-              cat "$file" | docker run --rm -i gofeatureflag/go-feature-flag-cli lint - --format=yaml
+              echo "Processing $file..."
+
+              docker cp "$file" linter:/tmp/"$file"
+
+              docker exec linter /app/go-feature-flag-cli lint /tmp/"$file" --format=yaml
             done
+            docker stop linter
