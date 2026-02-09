@@ -12,16 +12,19 @@ jobs:
       - image: cimg/base:current
     steps:
       - checkout
-      - setup_remote_docker
       - run:
-          name: Lint feature flag configs
-          command: |
+          name: Download and Install GO Feature Flag CLI
+          command: |    
+            URL=$(curl -s https://api.github.com/repos/thomaspoignant/go-feature-flag/releases | jq -r '[.[] | select(.tag_name | test("^v[0-9]"))][0].assets[] | select(.name | contains("Linux_x86_64.tar.gz")) | .browser_download_url')
+            echo "Downloading from: $URL"
+            curl -L "$URL" --output release.tar.gz
+            tar -zxvf release.tar.gz
+      - run:
+          name: Lint Feature Flags
+          command: |      
             for file in *.goff.yaml; do
-              if [ -f "$file" ]; then
-                echo "Linting $file..."
-                docker run --rm \
-                  -v "$PWD":/data \
-                  gofeatureflag/go-feature-flag-cli \
-                  lint "/data/$file" --format=yaml
-              fi
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              ./go-feature-flag-cli lint "$file" --format=yaml
+            fi
             done
