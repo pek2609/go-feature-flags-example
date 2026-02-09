@@ -12,17 +12,34 @@ jobs:
       - image: cimg/base:current
     steps:
       - checkout
-      - setup_remote_docker
       - run:
-          name: Lint feature flags
-          command: |
-            docker run -d --name linter --rm --entrypoint /app/go-feature-flag-cli gofeatureflag/go-feature-flag-cli version
+          # 1. retrieve release json
+          # 2. retrieve cli binary url
+          # 3. dwonload and install cli
+
+          name: Download and Install GO Feature Flag CLI
+          environment:
+            REPO: "thomaspoignant/go-feature-flag"
+            BINARY_PATTERN: "go-feature-flag-cli_.*_Linux_x86_64.tar.gz$"
+          command: |  
+            RELEASE_JSON=$(curl -s "https://api.github.com/repos/$REPO/releases" | jq '[.[] | select(.tag_name | test("^v[0-9]"))][0]')
+            CLI_URL=$(echo "$RELEASE_JSON" | jq -r --arg pattern "$BINARY_PATTERN" '.assets[] | select(.name | test($pattern)) | .browser_download_url') 
+            
+            if [ "$CLI_URL" == "null" ]; then
+              echo "Unable to install GO Feature Flag CLI: Binary not found!"
+              exit 1
+            fi
+            
+            echo "Downloading cli from: $CLI_URL"
+            curl -L "$CLI_URL" --output release.tar.gz
+            tar -zxvf release.tar.gz go-feature-flag-cli
+            rm release.tar.gz
+      - run:
+          name: Lint Feature Flags
+          command: |      
             for file in *.goff.yaml; do
-              [ -e "$file" ] || continue
-              echo "Processing $file..."
-
-              docker cp "$file" linter:/tmp/"$file"
-
-              docker exec linter /app/go-feature-flag-cli lint /tmp/"$file" --format=yaml
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              ./go-feature-flag-cli lint "$file" --format=yaml
+            fi
             done
-            docker stop linter
